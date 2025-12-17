@@ -16,8 +16,9 @@ Watch mode monitors your source files for changes and automatically rebuilds you
 ```bash
 make watch
 ```
+- Immediately builds and runs the game
 - Monitors: `main.c`, `resources/`, `shell.html`
-- Auto-rebuilds and runs the native game
+- On file change: Kills running game, rebuilds, runs again
 - Perfect for quick iteration on game logic
 - Clears screen and shows build status
 
@@ -63,8 +64,9 @@ The Makefile automatically detects which method is available and uses the best o
 cd /Users/jayleimer/Downloads/2048
 make watch
 
-# Now edit main.c in your editor
-# Save file → Game auto-rebuilds and runs!
+# Game runs immediately!
+# Edit main.c in your editor
+# Save file → Game closes, rebuilds, and reopens!
 # Press Ctrl+C in terminal when done
 ```
 
@@ -126,7 +128,9 @@ Keep your browser window visible alongside your editor:
 ### 4. Native Development Tip
 
 The game window will close and reopen on each rebuild:
-- Normal behavior - not a bug!
+- This is intentional - ensures clean state
+- Old process killed before rebuild
+- New process starts with latest code
 - Quick iteration cycle
 - See changes immediately
 

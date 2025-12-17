@@ -52,11 +52,18 @@ Then open http://localhost:8000/game.html in your browser.
 
 ```bash
 # Watch and auto-rebuild native version
+# Runs immediately, then watches for changes
 make watch
 
 # Watch and auto-rebuild web version (includes web server)
 make watch-web
 ```
+
+**How watch mode works:**
+- Runs your game immediately
+- Monitors your source files for changes
+- On save: kills the old process, rebuilds, and runs the new version
+- Instant feedback on your changes!
 
 **Pro Tip**: Install `fswatch` for instant file change detection:
 ```bash
