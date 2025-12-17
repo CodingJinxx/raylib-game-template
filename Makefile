@@ -79,6 +79,10 @@ $(NAME).html: $(SRC) $(RAYLIB_WEB_LIB)
 
 # Simple HTTP server for testing
 serve:
+	@if [ ! -d "$(DIST_DIR)" ]; then \
+		echo "Error: $(DIST_DIR) directory not found. Run 'make web' first."; \
+		exit 1; \
+	fi
 	@echo "Starting web server at http://localhost:8000"
 	@echo "Opening http://localhost:8000/index.html in your browser"
 	@echo "Press Ctrl+C to stop the server"
@@ -219,10 +223,9 @@ watch-web:
 	@echo "Open http://localhost:8000/index.html in your browser"
 	@echo ""
 	@# Start the web server in the background
-	@cd $(DIST_DIR) 2>/dev/null || mkdir -p $(DIST_DIR); \
-	cd $(DIST_DIR) && python3 -m http.server 8000 > /dev/null 2>&1 & \
+	@mkdir -p $(DIST_DIR); \
+	(cd $(DIST_DIR) && python3 -m http.server 8000 > /dev/null 2>&1) & \
 	SERVER_PID=$$!; \
-	cd ..; \
 	echo "Server started (PID: $$SERVER_PID)"; \
 	echo ""; \
 	trap "kill $$SERVER_PID 2>/dev/null; echo 'Server stopped'" EXIT; \
