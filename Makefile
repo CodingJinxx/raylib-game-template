@@ -79,31 +79,45 @@ serve:
 	@python3 -m http.server 8000
 
 # Watch for changes and rebuild
+# Watch for changes and rebuild
 watch:
 	@echo "👀 Watching for changes... (Press Ctrl+C to stop)"
-	@echo "Building and running initial version..."
-	@echo ""
-	@$(MAKE) run
-	@echo ""
-	@echo "Now watching for changes..."
-	@if command -v fswatch >/dev/null 2>&1; then \
+	@echo "Building initial version..."
+	@$(MAKE) $(NAME)
+	@echo "Starting game..."
+	@echo "$$$$" > /tmp/game_watch.pid; \
+	./$(NAME) & \
+	echo "$$!" > /tmp/game_game.pid; \
+	GAME_PID=$$(cat /tmp/game_game.pid); \
+	echo "Game started (PID: $$GAME_PID)"; \
+	echo "Now watching for changes..."; \
+	trap "kill $$(cat /tmp/game_game.pid 2>/dev/null) 2>/dev/null; rm -f /tmp/game_game.pid /tmp/game_watch.pid; echo 'Game stopped'" EXIT INT TERM; \
+	if command -v fswatch >/dev/null 2>&1; then \
 		echo "Using fswatch for file monitoring"; \
 		fswatch -o $(SRC) resources/ shell.html 2>/dev/null | while read num; do \
-			clear; \
+			echo ""; \
 			echo "🔨 Change detected, rebuilding..."; \
-			pkill -x $(NAME) 2>/dev/null || true; \
-			sleep 0.2; \
-			$(MAKE) run && echo "✅ Build complete!"; \
+			kill $$(cat /tmp/game_game.pid 2>/dev/null) 2>/dev/null || true; \
+			sleep 0.3; \
+			if $(MAKE) $(NAME); then \
+				./$(NAME) & \
+				echo "$$!" > /tmp/game_game.pid; \
+				echo "✅ Rebuild complete! Game restarted (PID: $$(cat /tmp/game_game.pid))"; \
+			fi; \
 		done; \
 	elif command -v inotifywait >/dev/null 2>&1; then \
 		echo "Using inotifywait for file monitoring"; \
 		while true; do \
 			inotifywait -qre modify,create,delete $(SRC) resources/ shell.html 2>/dev/null; \
-			clear; \
+			echo ""; \
 			echo "🔨 Change detected, rebuilding..."; \
-			pkill -x $(NAME) 2>/dev/null || true; \
-			sleep 0.2; \
-			$(MAKE) run && echo "✅ Build complete!"; \
+			kill $$(cat /tmp/game_game.pid 2>/dev/null) 2>/dev/null || true; \
+			sleep 0.3; \
+			if $(MAKE) $(NAME); then \
+				./$(NAME) & \
+				echo "$$!" > /tmp/game_game.pid; \
+				echo "✅ Rebuild complete! Game restarted (PID: $$(cat /tmp/game_game.pid))"; \
+			fi; \
 		done; \
 	else \
 		echo "Using polling (install fswatch for better performance: brew install fswatch)"; \
@@ -112,11 +126,15 @@ watch:
 			sleep 1; \
 			CURRENT_HASH=$$(find $(SRC) resources/ shell.html -type f -exec md5 {} \; 2>/dev/null | md5 | cut -d' ' -f1); \
 			if [ "$$CURRENT_HASH" != "$$LAST_HASH" ]; then \
-				clear; \
+				echo ""; \
 				echo "🔨 Change detected, rebuilding..."; \
-				pkill -x $(NAME) 2>/dev/null || true; \
-				sleep 0.2; \
-				$(MAKE) run && echo "✅ Build complete!"; \
+				kill $$(cat /tmp/game_game.pid 2>/dev/null) 2>/dev/null || true; \
+				sleep 0.3; \
+				if $(MAKE) $(NAME); then \
+					./$(NAME) & \
+					echo "$$!" > /tmp/game_game.pid; \
+					echo "✅ Rebuild complete! Game restarted (PID: $$(cat /tmp/game_game.pid))"; \
+				fi; \
 				LAST_HASH=$$CURRENT_HASH; \
 			fi; \
 		done; \
