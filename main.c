@@ -12,7 +12,7 @@ int main(void) {
     // Game initialization
     Vector2 ballPosition = { (float)SCREEN_WIDTH/2, (float)SCREEN_HEIGHT/2 };
     Vector2 ballSpeed = { 5.0f, 4.0f };
-    float ballRadius = 20.0f;
+    float ballRadius = 50.0f;
 
     // Main game loop
     while (!WindowShouldClose()) {

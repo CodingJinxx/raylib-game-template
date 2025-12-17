@@ -33,28 +33,66 @@ git clone --depth 1 --branch 5.5 https://github.com/raysan5/raylib.git
 cd raylib/src
 make PLATFORM=PLATFORM_DESKTOP
 sudo make install PLATFORM=PLATFORM_DESKTOP
-cd ../..
+
+# Install pkg-config file
+cd ..
+sudo mkdir -p /usr/local/lib/pkgconfig
+sudo sed "s|prefix=/usr/local|prefix=/usr/local|g" raylib.pc.in > /tmp/raylib.pc.tmp
+sudo sed -i "s|@CMAKE_INSTALL_LIBDIR@|lib|g" /tmp/raylib.pc.tmp
+sudo sed -i "s|@CMAKE_INSTALL_INCLUDEDIR@|include|g" /tmp/raylib.pc.tmp
+sudo sed -i "s|@PROJECT_VERSION@|5.5|g" /tmp/raylib.pc.tmp
+sudo mv /tmp/raylib.pc.tmp /usr/local/lib/pkgconfig/raylib.pc
+
+cd /tmp
 rm -rf raylib
+
+# Update pkg-config path
+export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+sudo ldconfig
 
 # Install Emscripten for web builds
 echo "🌐 Installing Emscripten for WebAssembly builds..."
-cd /tmp
-git clone --depth 1 https://github.com/emscripten-core/emsdk.git
-cd emsdk
-./emsdk install latest
-./emsdk activate latest
-cd ..
+EMSDK_DIR="/usr/local/emsdk"
+if [ ! -d "$EMSDK_DIR" ]; then
+    sudo mkdir -p "$EMSDK_DIR"
+    sudo chown -R "$(whoami)" "$EMSDK_DIR"
+    git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$EMSDK_DIR"
+    EMSDK_PREV_DIR="$(pwd)"
+    cd "$EMSDK_DIR"
+    ./emsdk install latest
+    ./emsdk activate latest
+    cd "$EMSDK_PREV_DIR"
+else
+    echo "Emscripten already installed at $EMSDK_DIR"
+fi
+
+# Source Emscripten environment for current session
+if [ -f "$EMSDK_DIR/emsdk_env.sh" ]; then
+    # shellcheck source=/dev/null
+    source "$EMSDK_DIR/emsdk_env.sh"
+fi
 
 # Add emsdk to PATH in .bashrc
-echo "" >> ~/.bashrc
-echo "# Emscripten SDK" >> ~/.bashrc
-echo "source /tmp/emsdk/emsdk_env.sh > /dev/null 2>&1" >> ~/.bashrc
+if ! grep -q "source $EMSDK_DIR/emsdk_env.sh" ~/.bashrc 2>/dev/null; then
+    {
+        echo ""
+        echo "# Emscripten SDK"
+        echo "source $EMSDK_DIR/emsdk_env.sh > /dev/null 2>&1"
+        echo ""
+        echo "# pkg-config path for raylib"
+        echo "export PKG_CONFIG_PATH=\"/usr/local/lib/pkgconfig:\$PKG_CONFIG_PATH\""
+    } >> ~/.bashrc
+fi
 
 # Also add to .zshrc if it exists
 if [ -f ~/.zshrc ]; then
-    echo "" >> ~/.zshrc
-    echo "# Emscripten SDK" >> ~/.zshrc
-    echo "source /tmp/emsdk/emsdk_env.sh > /dev/null 2>&1" >> ~/.zshrc
+    if ! grep -q "source $EMSDK_DIR/emsdk_env.sh" ~/.zshrc 2>/dev/null; then
+        {
+            echo ""
+            echo "# Emscripten SDK"
+            echo "source $EMSDK_DIR/emsdk_env.sh > /dev/null 2>&1"
+        } >> ~/.zshrc
+    fi
 fi
 
 # Verify installations
@@ -67,7 +105,12 @@ echo ""
 echo "Raylib installed at:"
 ldconfig -p | grep raylib || echo "Raylib library installed"
 echo ""
-echo "Emscripten will be available after sourcing the environment."
+echo "Emscripten version:"
+if command -v emcc >/dev/null 2>&1; then
+    emcc --version | head -n 1
+else
+    echo "Emscripten installed at $EMSDK_DIR (source environment to use: source $EMSDK_DIR/emsdk_env.sh)"
+fi
 echo ""
 echo "🎉 Your development environment is ready!"
 echo ""
