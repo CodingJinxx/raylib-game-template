@@ -2,6 +2,14 @@
 
 A minimal template for creating games with [raylib](https://www.raylib.com/) that supports both native desktop and web (WebAssembly) builds.
 
+## ☁️ Quick Start with GitHub Codespaces
+
+**No local setup required!** Open this project in GitHub Codespaces for instant development:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new)
+
+All dependencies (raylib, Emscripten, build tools) are automatically installed. See [`.devcontainer/README.md`](.devcontainer/README.md) for details.
+
 ## Features
 
 - 🎮 Cross-platform game development with raylib

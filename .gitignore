@@ -14,7 +14,10 @@ raylib-web/
 raylib-src/
 
 # Editor files
-.vscode/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.devcontainer/
 .idea/
 *.swp
 *.swo
