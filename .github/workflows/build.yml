@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   build-native:
     runs-on: ${{ matrix.os }}
@@ -40,6 +43,21 @@ jobs:
         cd /tmp/raylib/src
         make PLATFORM=PLATFORM_DESKTOP
         sudo make install PLATFORM=PLATFORM_DESKTOP
+        # Create pkg-config file for raylib
+        sudo mkdir -p /usr/local/lib/pkgconfig
+        sudo tee /usr/local/lib/pkgconfig/raylib.pc > /dev/null <<EOF
+        prefix=/usr/local
+        exec_prefix=\${prefix}
+        libdir=\${exec_prefix}/lib
+        includedir=\${prefix}/include
+        
+        Name: raylib
+        Description: A simple and easy-to-use library to enjoy videogames programming
+        URL: https://github.com/raysan5/raylib
+        Version: 5.5
+        Libs: -L\${libdir} -lraylib -lGL -lpthread -ldl -lrt -lX11 -lm
+        Cflags: -I\${includedir}
+        EOF
         sudo ldconfig
     
     - name: Install raylib (macOS)
@@ -48,6 +66,8 @@ jobs:
     
     - name: Build
       run: make
+      env:
+        PKG_CONFIG_PATH: /usr/local/lib/pkgconfig:${{ env.PKG_CONFIG_PATH }}
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
