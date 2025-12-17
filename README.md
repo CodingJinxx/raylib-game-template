@@ -48,6 +48,24 @@ make serve
 
 Then open http://localhost:8000/game.html in your browser.
 
+### 4. Development with auto-rebuild (watch mode)
+
+```bash
+# Watch and auto-rebuild native version
+make watch
+
+# Watch and auto-rebuild web version (includes web server)
+make watch-web
+```
+
+**Pro Tip**: Install `fswatch` for instant file change detection:
+```bash
+brew install fswatch  # macOS
+sudo apt-get install inotify-tools  # Linux
+```
+
+Without `fswatch`, watch mode uses polling (checks every 1-2 seconds).
+
 ## Project Structure
 
 ```
@@ -78,11 +96,15 @@ Place your game assets (fonts, images, sounds) in the `resources/` directory. Th
 
 ## Makefile Targets
 
-- `make` or `make all` - Build native executable
-- `make run` - Build and run natively
-- `make web` - Build for web (creates HTML/JS/WASM files)
-- `make serve` - Start a local web server and open the game in browser
-- `make clean` - Remove all build artifacts
+| Command | Description |
+|---------|-------------|
+| `make` or `make all` | Build native executable |
+| `make run` | Build and run natively |
+| `make web` | Build for web (creates HTML/JS/WASM files) |
+| `make serve` | Start a local web server and open the game in browser |
+| `make watch` | 👀 Auto-rebuild and run on file changes (native) |
+| `make watch-web` | 👀 Auto-rebuild web version on changes + live server |
+| `make clean` | Remove all build artifacts |
 
 ## Web Deployment
 

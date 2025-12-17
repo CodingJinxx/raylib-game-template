@@ -78,4 +78,82 @@ serve:
 	@open http://localhost:8000/$(NAME).html || xdg-open http://localhost:8000/$(NAME).html || true &
 	@python3 -m http.server 8000
 
-.PHONY: all clean run web serve
+# Watch for changes and rebuild
+watch:
+	@echo "👀 Watching for changes... (Press Ctrl+C to stop)"
+	@echo "Will rebuild and run on file changes"
+	@echo ""
+	@if command -v fswatch >/dev/null 2>&1; then \
+		echo "Using fswatch for file monitoring"; \
+		fswatch -o $(SRC) resources/ shell.html 2>/dev/null | while read num; do \
+			clear; \
+			echo "🔨 Change detected, rebuilding..."; \
+			$(MAKE) run && echo "✅ Build complete!"; \
+		done; \
+	elif command -v inotifywait >/dev/null 2>&1; then \
+		echo "Using inotifywait for file monitoring"; \
+		while true; do \
+			inotifywait -qre modify,create,delete $(SRC) resources/ shell.html 2>/dev/null; \
+			clear; \
+			echo "🔨 Change detected, rebuilding..."; \
+			$(MAKE) run && echo "✅ Build complete!"; \
+		done; \
+	else \
+		echo "Using polling (install fswatch for better performance: brew install fswatch)"; \
+		LAST_HASH=$$(find $(SRC) resources/ shell.html -type f -exec md5 {} \; 2>/dev/null | md5 | cut -d' ' -f1); \
+		while true; do \
+			sleep 1; \
+			CURRENT_HASH=$$(find $(SRC) resources/ shell.html -type f -exec md5 {} \; 2>/dev/null | md5 | cut -d' ' -f1); \
+			if [ "$$CURRENT_HASH" != "$$LAST_HASH" ]; then \
+				clear; \
+				echo "🔨 Change detected, rebuilding..."; \
+				$(MAKE) run && echo "✅ Build complete!"; \
+				LAST_HASH=$$CURRENT_HASH; \
+			fi; \
+		done; \
+	fi
+
+# Watch for changes and rebuild web version
+watch-web:
+	@echo "👀 Watching for web changes... (Press Ctrl+C to stop)"
+	@echo "Will rebuild web version on file changes"
+	@echo "Starting web server at http://localhost:8000"
+	@echo "Open http://localhost:8000/$(NAME).html in your browser"
+	@echo ""
+	@# Start the web server in the background
+	@python3 -m http.server 8000 > /dev/null 2>&1 & \
+	SERVER_PID=$$!; \
+	echo "Server started (PID: $$SERVER_PID)"; \
+	echo ""; \
+	trap "kill $$SERVER_PID 2>/dev/null; echo 'Server stopped'" EXIT; \
+	if command -v fswatch >/dev/null 2>&1; then \
+		echo "Using fswatch for file monitoring"; \
+		fswatch -o $(SRC) resources/ shell.html 2>/dev/null | while read num; do \
+			echo ""; \
+			echo "🔨 Change detected, rebuilding web..."; \
+			$(MAKE) web && echo "✅ Rebuild complete! Refresh your browser."; \
+		done; \
+	elif command -v inotifywait >/dev/null 2>&1; then \
+		echo "Using inotifywait for file monitoring"; \
+		while true; do \
+			inotifywait -qre modify,create,delete $(SRC) resources/ shell.html 2>/dev/null; \
+			echo ""; \
+			echo "🔨 Change detected, rebuilding web..."; \
+			$(MAKE) web && echo "✅ Rebuild complete! Refresh your browser."; \
+		done; \
+	else \
+		echo "Using polling (install fswatch for better performance: brew install fswatch)"; \
+		LAST_HASH=$$(find $(SRC) resources/ shell.html -type f -exec md5 {} \; 2>/dev/null | md5 | cut -d' ' -f1); \
+		while true; do \
+			sleep 2; \
+			CURRENT_HASH=$$(find $(SRC) resources/ shell.html -type f -exec md5 {} \; 2>/dev/null | md5 | cut -d' ' -f1); \
+			if [ "$$CURRENT_HASH" != "$$LAST_HASH" ]; then \
+				echo ""; \
+				echo "🔨 Change detected, rebuilding web..."; \
+				$(MAKE) web && echo "✅ Rebuild complete! Refresh your browser."; \
+				LAST_HASH=$$CURRENT_HASH; \
+			fi; \
+		done; \
+	fi
+
+.PHONY: all clean run web serve watch watch-web

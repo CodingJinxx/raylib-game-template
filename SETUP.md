@@ -62,6 +62,34 @@ make serve
 
 That's it! 🎉
 
+## 🔄 Development Workflow
+
+### Watch Mode (Auto-Rebuild)
+
+For faster development, use watch mode to automatically rebuild when you save files:
+
+```bash
+# Native development - auto rebuilds and runs
+make watch
+
+# Web development - auto rebuilds + live server
+make watch-web
+```
+
+**Watch mode features:**
+- 👀 Monitors `main.c`, `resources/`, and `shell.html` for changes
+- 🔨 Automatically rebuilds on save
+- ⚡ Instant feedback (with `fswatch`) or 1-2 second polling
+- 🌐 Web watch includes built-in server
+
+**Optional: Install fswatch for instant detection**
+```bash
+brew install fswatch  # macOS (recommended)
+sudo apt-get install inotify-tools  # Linux
+```
+
+Without these tools, watch mode uses file polling which still works great!
+
 ## 📝 Creating Your Game
 
 ### Edit the Main File
@@ -140,6 +168,8 @@ Your game will be available at: `https://yourusername.github.io/your-repo-name/g
 | `make run` | Build and run native version |
 | `make web` | Build for web (creates .html, .js, .wasm files) |
 | `make serve` | Start local server and open in browser |
+| `make watch` | 👀 Auto-rebuild native on file changes |
+| `make watch-web` | 👀 Auto-rebuild web + live server |
 | `make clean` | Remove all build files |
 
 ## 📚 Learning Resources

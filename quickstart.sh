@@ -31,6 +31,8 @@ echo "  make        - Build native executable"
 echo "  make run    - Build and run the game"
 echo "  make web    - Build for web (requires Emscripten)"
 echo "  make serve  - Build and serve web version"
+echo "  make watch  - 👀 Auto-rebuild on changes (native)"
+echo "  make watch-web - 👀 Auto-rebuild on changes (web)"
 echo "  make clean  - Clean all build files"
 echo ""
 
