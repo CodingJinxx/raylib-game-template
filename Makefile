@@ -28,7 +28,7 @@ $(NAME): $(SRC)
 
 clean:
 	rm -f $(NAME) $(NAME).wasm $(NAME).js $(NAME).html $(NAME).data
-	rm -rf raylib-web raylib-src
+	rm -rf raylib-web raylib-src dist
 
 run: $(NAME)
 	./$(NAME)
@@ -37,9 +37,16 @@ run: $(NAME)
 RAYLIB_WEB := raylib-web
 RAYLIB_WEB_INCLUDE := $(RAYLIB_WEB)/include
 RAYLIB_WEB_LIB := $(RAYLIB_WEB)/lib/libraylib.a
+DIST_DIR := dist
 
 web: $(NAME).html
 	@echo "WebAssembly build complete!"
+	@mkdir -p $(DIST_DIR)
+	@cp $(NAME).html $(DIST_DIR)/index.html
+	@cp $(NAME).js $(DIST_DIR)/
+	@cp $(NAME).wasm $(DIST_DIR)/
+	@cp $(NAME).data $(DIST_DIR)/
+	@echo "Files copied to $(DIST_DIR)/ directory"
 	@echo "Run 'make serve' to start a local web server"
 
 $(RAYLIB_WEB_LIB):
@@ -73,10 +80,9 @@ $(NAME).html: $(SRC) $(RAYLIB_WEB_LIB)
 # Simple HTTP server for testing
 serve:
 	@echo "Starting web server at http://localhost:8000"
-	@echo "Opening http://localhost:8000/$(NAME).html in your browser"
+	@echo "Opening http://localhost:8000/index.html in your browser"
 	@echo "Press Ctrl+C to stop the server"
-	@open http://localhost:8000/$(NAME).html || xdg-open http://localhost:8000/$(NAME).html || true &
-	@python3 -m http.server 8000
+	@cd $(DIST_DIR) && (open http://localhost:8000/index.html || xdg-open http://localhost:8000/index.html || true) & python3 -m http.server 8000
 
 # Watch for changes and rebuild
 watch:
@@ -210,11 +216,13 @@ watch-web:
 	@echo "👀 Watching for web changes... (Press Ctrl+C to stop)"
 	@echo "Will rebuild web version on file changes"
 	@echo "Starting web server at http://localhost:8000"
-	@echo "Open http://localhost:8000/$(NAME).html in your browser"
+	@echo "Open http://localhost:8000/index.html in your browser"
 	@echo ""
 	@# Start the web server in the background
-	@python3 -m http.server 8000 > /dev/null 2>&1 & \
+	@cd $(DIST_DIR) 2>/dev/null || mkdir -p $(DIST_DIR); \
+	cd $(DIST_DIR) && python3 -m http.server 8000 > /dev/null 2>&1 & \
 	SERVER_PID=$$!; \
+	cd ..; \
 	echo "Server started (PID: $$SERVER_PID)"; \
 	echo ""; \
 	trap "kill $$SERVER_PID 2>/dev/null; echo 'Server stopped'" EXIT; \

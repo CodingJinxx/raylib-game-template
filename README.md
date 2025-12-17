@@ -54,7 +54,7 @@ make web
 make serve
 ```
 
-Then open http://localhost:8000/game.html in your browser.
+Then open http://localhost:8000/index.html in your browser.
 
 ### 4. Development with auto-rebuild (watch mode)
 
@@ -123,14 +123,21 @@ Place your game assets (fonts, images, sounds) in the `resources/` directory. Th
 
 ## Web Deployment
 
-After running `make web`, you'll have these files ready for deployment:
+After running `make web`, you'll have a `dist/` directory with these files ready for deployment:
 
-- `game.html` - Main HTML file
+- `index.html` - Main HTML file
 - `game.js` - JavaScript glue code
 - `game.wasm` - WebAssembly binary
 - `game.data` - Packed resources
 
-Upload these files to any static web hosting service (GitHub Pages, Netlify, Vercel, etc.).
+Upload the contents of the `dist/` directory to any static web hosting service (GitHub Pages, Netlify, Vercel, etc.).
+
+### GitHub Pages
+
+This template includes automatic deployment to GitHub Pages:
+- Push to the `main` branch to trigger the build and deployment
+- Your game will be available at `https://<username>.github.io/<repository-name>/`
+- The workflow builds the web version and deploys it automatically
 
 ## Tips
 
