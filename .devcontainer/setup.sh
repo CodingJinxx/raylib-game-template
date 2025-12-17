@@ -52,6 +52,12 @@ else
     echo "Emscripten already installed at $EMSDK_DIR"
 fi
 
+# Source Emscripten environment for current session
+if [ -f "$EMSDK_DIR/emsdk_env.sh" ]; then
+    # shellcheck source=/dev/null
+    source "$EMSDK_DIR/emsdk_env.sh"
+fi
+
 # Add emsdk to PATH in .bashrc
 if ! grep -q "source $EMSDK_DIR/emsdk_env.sh" ~/.bashrc 2>/dev/null; then
     {
@@ -82,7 +88,12 @@ echo ""
 echo "Raylib installed at:"
 ldconfig -p | grep raylib || echo "Raylib library installed"
 echo ""
-echo "Emscripten will be available after sourcing the environment."
+echo "Emscripten version:"
+if command -v emcc >/dev/null 2>&1; then
+    emcc --version | head -n 1
+else
+    echo "Emscripten installed at $EMSDK_DIR (source environment to use: source $EMSDK_DIR/emsdk_env.sh)"
+fi
 echo ""
 echo "🎉 Your development environment is ready!"
 echo ""
