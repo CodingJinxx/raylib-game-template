@@ -33,8 +33,22 @@ git clone --depth 1 --branch 5.5 https://github.com/raysan5/raylib.git
 cd raylib/src
 make PLATFORM=PLATFORM_DESKTOP
 sudo make install PLATFORM=PLATFORM_DESKTOP
-cd ../..
+
+# Install pkg-config file
+cd ..
+sudo mkdir -p /usr/local/lib/pkgconfig
+sudo sed "s|prefix=/usr/local|prefix=/usr/local|g" raylib.pc.in > /tmp/raylib.pc.tmp
+sudo sed -i "s|@CMAKE_INSTALL_LIBDIR@|lib|g" /tmp/raylib.pc.tmp
+sudo sed -i "s|@CMAKE_INSTALL_INCLUDEDIR@|include|g" /tmp/raylib.pc.tmp
+sudo sed -i "s|@PROJECT_VERSION@|5.5|g" /tmp/raylib.pc.tmp
+sudo mv /tmp/raylib.pc.tmp /usr/local/lib/pkgconfig/raylib.pc
+
+cd /tmp
 rm -rf raylib
+
+# Update pkg-config path
+export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+sudo ldconfig
 
 # Install Emscripten for web builds
 echo "🌐 Installing Emscripten for WebAssembly builds..."
@@ -64,6 +78,9 @@ if ! grep -q "source $EMSDK_DIR/emsdk_env.sh" ~/.bashrc 2>/dev/null; then
         echo ""
         echo "# Emscripten SDK"
         echo "source $EMSDK_DIR/emsdk_env.sh > /dev/null 2>&1"
+        echo ""
+        echo "# pkg-config path for raylib"
+        echo "export PKG_CONFIG_PATH=\"/usr/local/lib/pkgconfig:\$PKG_CONFIG_PATH\""
     } >> ~/.bashrc
 fi
 

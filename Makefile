@@ -16,8 +16,8 @@ ifeq ($(UNAME_S),Darwin)
     LDFLAGS += -framework CoreVideo -framework IOKit -framework Cocoa -framework GLUT -framework OpenGL
 else
     # Linux/other settings
-    CFLAGS  += $(shell pkg-config --cflags raylib)
-    LDFLAGS := $(shell pkg-config --libs raylib)
+    CFLAGS  += $(shell PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH" pkg-config --cflags raylib 2>/dev/null || echo "-I/usr/local/include")
+    LDFLAGS := $(shell PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH" pkg-config --libs raylib 2>/dev/null || echo "-L/usr/local/lib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11")
 endif
 
 # Targets

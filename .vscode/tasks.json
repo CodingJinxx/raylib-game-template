@@ -33,7 +33,7 @@
     {
       "label": "Build Web (WASM)",
       "type": "shell",
-      "command": "source /tmp/emsdk/emsdk_env.sh && make web",
+      "command": "source /usr/local/emsdk/emsdk_env.sh && make web",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
