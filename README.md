@@ -135,9 +135,12 @@ Upload the contents of the `dist/` directory to any static web hosting service (
 ### GitHub Pages
 
 This template includes automatic deployment to GitHub Pages:
-- Push to the `main` branch to trigger the build and deployment
-- Your game will be available at `https://<username>.github.io/<repository-name>/`
-- The workflow builds the web version and deploys it automatically
+1. **Enable GitHub Pages**: Go to your repository Settings → Pages → Source, and select "Deploy from a branch" with `gh-pages` branch and `/ (root)` folder
+2. Push to the `main` branch to trigger the build and deployment
+3. Your game will be available at `https://<username>.github.io/<repository-name>/`
+4. The workflow builds the web version and deploys it automatically
+
+**Note**: After the first deployment, it may take a few minutes for your site to become available.
 
 ## Tips
 
