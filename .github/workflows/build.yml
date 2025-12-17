@@ -55,7 +55,7 @@ jobs:
         Description: A simple and easy-to-use library to enjoy videogames programming
         URL: https://github.com/raysan5/raylib
         Version: 5.5
-        Libs: -L\${libdir} -lraylib -lm
+        Libs: -L\${libdir} -lraylib -lGL -lpthread -ldl -lrt -lX11 -lm
         Cflags: -I\${includedir}
         EOF
         sudo ldconfig
