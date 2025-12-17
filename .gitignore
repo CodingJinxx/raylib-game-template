@@ -4,6 +4,7 @@ game.wasm
 game.js
 game.html
 game.data
+dist/
 
 # macOS
 .DS_Store
