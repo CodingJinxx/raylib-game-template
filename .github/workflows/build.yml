@@ -1,0 +1,68 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-native:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install raylib (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libraylib-dev
+    
+    - name: Install raylib (macOS)
+      if: matrix.os == 'macos-latest'
+      run: brew install raylib
+    
+    - name: Build
+      run: make
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: game-${{ matrix.os }}
+        path: game
+
+  build-web:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Emscripten
+      uses: mymindstorm/setup-emsdk@v12
+      with:
+        version: 3.1.45
+    
+    - name: Build for Web
+      run: make web
+    
+    - name: Upload web build
+      uses: actions/upload-artifact@v3
+      with:
+        name: game-web
+        path: |
+          game.html
+          game.js
+          game.wasm
+          game.data
+    
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: .
+        publish_branch: gh-pages

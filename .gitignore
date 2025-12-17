@@ -1,0 +1,25 @@
+# Build artifacts
+game
+game.wasm
+game.js
+game.html
+game.data
+
+# macOS
+.DS_Store
+*.dSYM/
+
+# Raylib web build dependencies
+raylib-web/
+raylib-src/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.log
