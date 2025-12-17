@@ -69,7 +69,7 @@ bash .devcontainer/setup.sh
 
 ### Emscripten not found
 ```bash
-source /tmp/emsdk/emsdk_env.sh
+source /usr/local/emsdk/emsdk_env.sh
 ```
 
 ### Raylib not found

@@ -38,23 +38,32 @@ rm -rf raylib
 
 # Install Emscripten for web builds
 echo "🌐 Installing Emscripten for WebAssembly builds..."
-cd /tmp
-git clone --depth 1 https://github.com/emscripten-core/emsdk.git
-cd emsdk
-./emsdk install latest
-./emsdk activate latest
-cd ..
+EMSDK_DIR="/usr/local/emsdk"
+if [ ! -d "$EMSDK_DIR" ]; then
+    sudo mkdir -p "$EMSDK_DIR"
+    sudo chown -R "$(whoami):$(whoami)" "$EMSDK_DIR"
+    git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$EMSDK_DIR"
+    cd "$EMSDK_DIR"
+    ./emsdk install latest
+    ./emsdk activate latest
+else
+    echo "Emscripten already installed at $EMSDK_DIR"
+fi
 
 # Add emsdk to PATH in .bashrc
-echo "" >> ~/.bashrc
-echo "# Emscripten SDK" >> ~/.bashrc
-echo "source /tmp/emsdk/emsdk_env.sh > /dev/null 2>&1" >> ~/.bashrc
+{
+    echo ""
+    echo "# Emscripten SDK"
+    echo "source $EMSDK_DIR/emsdk_env.sh > /dev/null 2>&1"
+} >> ~/.bashrc
 
 # Also add to .zshrc if it exists
 if [ -f ~/.zshrc ]; then
-    echo "" >> ~/.zshrc
-    echo "# Emscripten SDK" >> ~/.zshrc
-    echo "source /tmp/emsdk/emsdk_env.sh > /dev/null 2>&1" >> ~/.zshrc
+    {
+        echo ""
+        echo "# Emscripten SDK"
+        echo "source $EMSDK_DIR/emsdk_env.sh > /dev/null 2>&1"
+    } >> ~/.zshrc
 fi
 
 # Verify installations
