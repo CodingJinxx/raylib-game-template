@@ -79,31 +79,38 @@ serve:
 	@python3 -m http.server 8000
 
 # Watch for changes and rebuild
-# Watch for changes and rebuild
 watch:
 	@echo "👀 Watching for changes... (Press Ctrl+C to stop)"
 	@echo "Building initial version..."
 	@$(MAKE) $(NAME)
 	@echo "Starting game..."
-	@./$(NAME) & \
-	echo $$! > /tmp/game_game.pid; \
-	echo "Game started (PID: $$(cat /tmp/game_game.pid))"; \
+	@rm -f /tmp/game_game.pid; \
+	./$(NAME) & \
+	GAME_PID=$$!; \
+	echo $$GAME_PID > /tmp/game_game.pid; \
+	echo "Game started (PID: $$GAME_PID)"; \
 	echo "Now watching for changes..."; \
 	echo ""; \
-	trap "kill \`cat /tmp/game_game.pid 2>/dev/null\` 2>/dev/null; rm -f /tmp/game_game.pid; echo ''; echo 'Game stopped'" EXIT INT TERM; \
+	trap "pkill -P $$$$ 2>/dev/null; kill \`cat /tmp/game_game.pid 2>/dev/null\` 2>/dev/null; rm -f /tmp/game_game.pid; echo ''; echo 'Watch stopped, game closed'" EXIT INT TERM; \
 	if command -v fswatch >/dev/null 2>&1; then \
 		echo "Using fswatch for file monitoring"; \
-		fswatch -o $(SRC) resources/ shell.html 2>/dev/null | while read num; do \
+		fswatch -o $(SRC) resources/ shell.html 2>/dev/null | while read -r line; do \
 			echo "🔨 Change detected, rebuilding..."; \
 			OLD_PID=\`cat /tmp/game_game.pid 2>/dev/null\`; \
-			if [ -n "$$OLD_PID" ]; then \
-				kill $$OLD_PID 2>/dev/null && echo "Killed old game (PID: $$OLD_PID)" || echo "Old game already stopped"; \
+			if [ -n "$$OLD_PID" ] && kill -0 $$OLD_PID 2>/dev/null; then \
+				echo "Killing old game (PID: $$OLD_PID)"; \
+				kill $$OLD_PID 2>/dev/null; \
+				sleep 0.3; \
+				kill -9 $$OLD_PID 2>/dev/null; \
 			fi; \
-			sleep 0.5; \
+			sleep 0.2; \
 			if $(MAKE) $(NAME); then \
 				./$(NAME) & \
-				echo $$! > /tmp/game_game.pid; \
-				echo "✅ Game restarted (PID: \`cat /tmp/game_game.pid\`)"; \
+				NEW_PID=$$!; \
+				echo $$NEW_PID > /tmp/game_game.pid; \
+				echo "✅ Game restarted (PID: $$NEW_PID)"; \
+			else \
+				echo "❌ Build failed"; \
 			fi; \
 			echo ""; \
 		done; \
@@ -113,14 +120,20 @@ watch:
 			inotifywait -qre modify,create,delete $(SRC) resources/ shell.html 2>/dev/null; \
 			echo "🔨 Change detected, rebuilding..."; \
 			OLD_PID=\`cat /tmp/game_game.pid 2>/dev/null\`; \
-			if [ -n "$$OLD_PID" ]; then \
-				kill $$OLD_PID 2>/dev/null && echo "Killed old game (PID: $$OLD_PID)" || echo "Old game already stopped"; \
+			if [ -n "$$OLD_PID" ] && kill -0 $$OLD_PID 2>/dev/null; then \
+				echo "Killing old game (PID: $$OLD_PID)"; \
+				kill $$OLD_PID 2>/dev/null; \
+				sleep 0.3; \
+				kill -9 $$OLD_PID 2>/dev/null; \
 			fi; \
-			sleep 0.5; \
+			sleep 0.2; \
 			if $(MAKE) $(NAME); then \
 				./$(NAME) & \
-				echo $$! > /tmp/game_game.pid; \
-				echo "✅ Game restarted (PID: \`cat /tmp/game_game.pid\`)"; \
+				NEW_PID=$$!; \
+				echo $$NEW_PID > /tmp/game_game.pid; \
+				echo "✅ Game restarted (PID: $$NEW_PID)"; \
+			else \
+				echo "❌ Build failed"; \
 			fi; \
 			echo ""; \
 		done; \
@@ -133,14 +146,20 @@ watch:
 			if [ "$$CURRENT_HASH" != "$$LAST_HASH" ]; then \
 				echo "🔨 Change detected, rebuilding..."; \
 				OLD_PID=\`cat /tmp/game_game.pid 2>/dev/null\`; \
-				if [ -n "$$OLD_PID" ]; then \
-					kill $$OLD_PID 2>/dev/null && echo "Killed old game (PID: $$OLD_PID)" || echo "Old game already stopped"; \
+				if [ -n "$$OLD_PID" ] && kill -0 $$OLD_PID 2>/dev/null; then \
+					echo "Killing old game (PID: $$OLD_PID)"; \
+					kill $$OLD_PID 2>/dev/null; \
+					sleep 0.3; \
+					kill -9 $$OLD_PID 2>/dev/null; \
 				fi; \
-				sleep 0.5; \
+				sleep 0.2; \
 				if $(MAKE) $(NAME); then \
 					./$(NAME) & \
-					echo $$! > /tmp/game_game.pid; \
-					echo "✅ Game restarted (PID: \`cat /tmp/game_game.pid\`)"; \
+					NEW_PID=$$!; \
+					echo $$NEW_PID > /tmp/game_game.pid; \
+					echo "✅ Game restarted (PID: $$NEW_PID)"; \
+				else \
+					echo "❌ Build failed"; \
 				fi; \
 				LAST_HASH=$$CURRENT_HASH; \
 				echo ""; \
