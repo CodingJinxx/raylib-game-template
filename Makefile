@@ -81,13 +81,18 @@ serve:
 # Watch for changes and rebuild
 watch:
 	@echo "👀 Watching for changes... (Press Ctrl+C to stop)"
-	@echo "Will rebuild and run on file changes"
+	@echo "Building and running initial version..."
 	@echo ""
+	@$(MAKE) run
+	@echo ""
+	@echo "Now watching for changes..."
 	@if command -v fswatch >/dev/null 2>&1; then \
 		echo "Using fswatch for file monitoring"; \
 		fswatch -o $(SRC) resources/ shell.html 2>/dev/null | while read num; do \
 			clear; \
 			echo "🔨 Change detected, rebuilding..."; \
+			pkill -x $(NAME) 2>/dev/null || true; \
+			sleep 0.2; \
 			$(MAKE) run && echo "✅ Build complete!"; \
 		done; \
 	elif command -v inotifywait >/dev/null 2>&1; then \
@@ -96,6 +101,8 @@ watch:
 			inotifywait -qre modify,create,delete $(SRC) resources/ shell.html 2>/dev/null; \
 			clear; \
 			echo "🔨 Change detected, rebuilding..."; \
+			pkill -x $(NAME) 2>/dev/null || true; \
+			sleep 0.2; \
 			$(MAKE) run && echo "✅ Build complete!"; \
 		done; \
 	else \
@@ -107,6 +114,8 @@ watch:
 			if [ "$$CURRENT_HASH" != "$$LAST_HASH" ]; then \
 				clear; \
 				echo "🔨 Change detected, rebuilding..."; \
+				pkill -x $(NAME) 2>/dev/null || true; \
+				sleep 0.2; \
 				$(MAKE) run && echo "✅ Build complete!"; \
 				LAST_HASH=$$CURRENT_HASH; \
 			fi; \
