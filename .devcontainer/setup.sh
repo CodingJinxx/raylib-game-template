@@ -41,7 +41,7 @@ echo "🌐 Installing Emscripten for WebAssembly builds..."
 EMSDK_DIR="/usr/local/emsdk"
 if [ ! -d "$EMSDK_DIR" ]; then
     sudo mkdir -p "$EMSDK_DIR"
-    sudo chown -R "$(whoami):$(whoami)" "$EMSDK_DIR"
+    sudo chown -R "$(whoami)" "$EMSDK_DIR"
     git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$EMSDK_DIR"
     cd "$EMSDK_DIR"
     ./emsdk install latest
