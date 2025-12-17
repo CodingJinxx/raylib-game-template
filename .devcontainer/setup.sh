@@ -43,27 +43,33 @@ if [ ! -d "$EMSDK_DIR" ]; then
     sudo mkdir -p "$EMSDK_DIR"
     sudo chown -R "$(whoami)" "$EMSDK_DIR"
     git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$EMSDK_DIR"
+    EMSDK_PREV_DIR="$(pwd)"
     cd "$EMSDK_DIR"
     ./emsdk install latest
     ./emsdk activate latest
+    cd "$EMSDK_PREV_DIR"
 else
     echo "Emscripten already installed at $EMSDK_DIR"
 fi
 
 # Add emsdk to PATH in .bashrc
-{
-    echo ""
-    echo "# Emscripten SDK"
-    echo "source $EMSDK_DIR/emsdk_env.sh > /dev/null 2>&1"
-} >> ~/.bashrc
-
-# Also add to .zshrc if it exists
-if [ -f ~/.zshrc ]; then
+if ! grep -q "source $EMSDK_DIR/emsdk_env.sh" ~/.bashrc 2>/dev/null; then
     {
         echo ""
         echo "# Emscripten SDK"
         echo "source $EMSDK_DIR/emsdk_env.sh > /dev/null 2>&1"
-    } >> ~/.zshrc
+    } >> ~/.bashrc
+fi
+
+# Also add to .zshrc if it exists
+if [ -f ~/.zshrc ]; then
+    if ! grep -q "source $EMSDK_DIR/emsdk_env.sh" ~/.zshrc 2>/dev/null; then
+        {
+            echo ""
+            echo "# Emscripten SDK"
+            echo "source $EMSDK_DIR/emsdk_env.sh > /dev/null 2>&1"
+        } >> ~/.zshrc
+    fi
 fi
 
 # Verify installations
