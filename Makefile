@@ -84,26 +84,48 @@ watch:
 	@echo "Building initial version..."
 	@$(MAKE) $(NAME)
 	@echo "Starting game..."
-	@rm -f /tmp/game_game.pid; \
+	@rm -f /tmp/game_game.pid /tmp/game_watch_fifo; \
+	mkfifo /tmp/game_watch_fifo 2>/dev/null || true; \
 	./$(NAME) & \
 	GAME_PID=$$!; \
 	echo $$GAME_PID > /tmp/game_game.pid; \
 	echo "Game started (PID: $$GAME_PID)"; \
 	echo "Now watching for changes..."; \
 	echo ""; \
-	trap "pkill -P $$$$ 2>/dev/null; kill \`cat /tmp/game_game.pid 2>/dev/null\` 2>/dev/null; rm -f /tmp/game_game.pid; echo ''; echo 'Watch stopped, game closed'" EXIT INT TERM; \
+	cleanup_watch() { \
+		if [ -f /tmp/game_game.pid ]; then \
+			OLD_PID=$$(cat /tmp/game_game.pid 2>/dev/null); \
+			[ -n "$$OLD_PID" ] && kill -9 $$OLD_PID 2>/dev/null; \
+		fi; \
+		pkill -9 fswatch 2>/dev/null; \
+		pkill -P $$$$ 2>/dev/null; \
+		rm -f /tmp/game_game.pid /tmp/game_watch_fifo; \
+		echo ""; \
+		echo "Watch stopped, game closed"; \
+	}; \
+	trap cleanup_watch EXIT INT TERM; \
 	if command -v fswatch >/dev/null 2>&1; then \
 		echo "Using fswatch for file monitoring"; \
-		fswatch -o $(SRC) resources/ shell.html 2>/dev/null | while read -r line; do \
+		fswatch -o $(SRC) resources/ shell.html 2>/dev/null > /tmp/game_watch_fifo & \
+		FSWATCH_PID=$$!; \
+		while read -r line; do \
 			echo "🔨 Change detected, rebuilding..."; \
-			OLD_PID=\`cat /tmp/game_game.pid 2>/dev/null\`; \
-			if [ -n "$$OLD_PID" ] && kill -0 $$OLD_PID 2>/dev/null; then \
-				echo "Killing old game (PID: $$OLD_PID)"; \
-				kill $$OLD_PID 2>/dev/null; \
-				sleep 0.3; \
-				kill -9 $$OLD_PID 2>/dev/null; \
+			if [ -f /tmp/game_game.pid ]; then \
+				OLD_PID=$$(cat /tmp/game_game.pid 2>/dev/null); \
+			else \
+				OLD_PID=""; \
 			fi; \
-			sleep 0.2; \
+			if [ -n "$$OLD_PID" ]; then \
+				if ps -p $$OLD_PID > /dev/null 2>&1; then \
+					echo "Killing old game (PID: $$OLD_PID)"; \
+					kill -TERM $$OLD_PID 2>/dev/null || true; \
+					sleep 0.3; \
+					if ps -p $$OLD_PID > /dev/null 2>&1; then \
+						kill -KILL $$OLD_PID 2>/dev/null || true; \
+						sleep 0.2; \
+					fi; \
+				fi; \
+			fi; \
 			if $(MAKE) $(NAME); then \
 				./$(NAME) & \
 				NEW_PID=$$!; \
@@ -113,20 +135,28 @@ watch:
 				echo "❌ Build failed"; \
 			fi; \
 			echo ""; \
-		done; \
+		done < /tmp/game_watch_fifo; \
 	elif command -v inotifywait >/dev/null 2>&1; then \
 		echo "Using inotifywait for file monitoring"; \
 		while true; do \
 			inotifywait -qre modify,create,delete $(SRC) resources/ shell.html 2>/dev/null; \
 			echo "🔨 Change detected, rebuilding..."; \
-			OLD_PID=\`cat /tmp/game_game.pid 2>/dev/null\`; \
-			if [ -n "$$OLD_PID" ] && kill -0 $$OLD_PID 2>/dev/null; then \
-				echo "Killing old game (PID: $$OLD_PID)"; \
-				kill $$OLD_PID 2>/dev/null; \
-				sleep 0.3; \
-				kill -9 $$OLD_PID 2>/dev/null; \
+			if [ -f /tmp/game_game.pid ]; then \
+				OLD_PID=$$(cat /tmp/game_game.pid 2>/dev/null); \
+			else \
+				OLD_PID=""; \
 			fi; \
-			sleep 0.2; \
+			if [ -n "$$OLD_PID" ]; then \
+				if ps -p $$OLD_PID > /dev/null 2>&1; then \
+					echo "Killing old game (PID: $$OLD_PID)"; \
+					kill -TERM $$OLD_PID 2>/dev/null || true; \
+					sleep 0.3; \
+					if ps -p $$OLD_PID > /dev/null 2>&1; then \
+						kill -KILL $$OLD_PID 2>/dev/null || true; \
+						sleep 0.2; \
+					fi; \
+				fi; \
+			fi; \
 			if $(MAKE) $(NAME); then \
 				./$(NAME) & \
 				NEW_PID=$$!; \
@@ -139,20 +169,28 @@ watch:
 		done; \
 	else \
 		echo "Using polling (install fswatch for better performance: brew install fswatch)"; \
-		LAST_HASH=\`find $(SRC) resources/ shell.html -type f -exec md5 {} \; 2>/dev/null | md5 | cut -d' ' -f1\`; \
+		LAST_HASH=$$(find $(SRC) resources/ shell.html -type f -exec md5 {} \; 2>/dev/null | md5 | cut -d' ' -f1); \
 		while true; do \
 			sleep 1; \
-			CURRENT_HASH=\`find $(SRC) resources/ shell.html -type f -exec md5 {} \; 2>/dev/null | md5 | cut -d' ' -f1\`; \
+			CURRENT_HASH=$$(find $(SRC) resources/ shell.html -type f -exec md5 {} \; 2>/dev/null | md5 | cut -d' ' -f1); \
 			if [ "$$CURRENT_HASH" != "$$LAST_HASH" ]; then \
 				echo "🔨 Change detected, rebuilding..."; \
-				OLD_PID=\`cat /tmp/game_game.pid 2>/dev/null\`; \
-				if [ -n "$$OLD_PID" ] && kill -0 $$OLD_PID 2>/dev/null; then \
-					echo "Killing old game (PID: $$OLD_PID)"; \
-					kill $$OLD_PID 2>/dev/null; \
-					sleep 0.3; \
-					kill -9 $$OLD_PID 2>/dev/null; \
+				if [ -f /tmp/game_game.pid ]; then \
+					OLD_PID=$$(cat /tmp/game_game.pid 2>/dev/null); \
+				else \
+					OLD_PID=""; \
 				fi; \
-				sleep 0.2; \
+				if [ -n "$$OLD_PID" ]; then \
+					if ps -p $$OLD_PID > /dev/null 2>&1; then \
+						echo "Killing old game (PID: $$OLD_PID)"; \
+						kill -TERM $$OLD_PID 2>/dev/null || true; \
+						sleep 0.3; \
+						if ps -p $$OLD_PID > /dev/null 2>&1; then \
+							kill -KILL $$OLD_PID 2>/dev/null || true; \
+							sleep 0.2; \
+						fi; \
+					fi; \
+				fi; \
 				if $(MAKE) $(NAME); then \
 					./$(NAME) & \
 					NEW_PID=$$!; \
