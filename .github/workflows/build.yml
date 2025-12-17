@@ -16,11 +16,31 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install raylib (Ubuntu)
+    - name: Install dependencies (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y libraylib-dev
+        sudo apt-get install -y \
+          build-essential \
+          git \
+          cmake \
+          libasound2-dev \
+          libx11-dev \
+          libxrandr-dev \
+          libxi-dev \
+          libgl1-mesa-dev \
+          libglu1-mesa-dev \
+          libxcursor-dev \
+          libxinerama-dev
+    
+    - name: Build and install raylib (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        git clone --depth 1 --branch 5.5 https://github.com/raysan5/raylib.git /tmp/raylib
+        cd /tmp/raylib/src
+        make PLATFORM=PLATFORM_DESKTOP
+        sudo make install PLATFORM=PLATFORM_DESKTOP
+        sudo ldconfig
     
     - name: Install raylib (macOS)
       if: matrix.os == 'macos-latest'
